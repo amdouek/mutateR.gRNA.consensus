@@ -258,6 +258,61 @@ run_exome_analysis <- function(gene_ids,
         start_batch_num, " to ", start_batch_num + n_batches - 1, ")\n\n", sep = "")
   }
 
+  # ═══════════════════════════════════════════════════════════════
+  # Python Environment Setup (CRITICAL FOR PARALLEL WORKERS)
+  # ═══════════════════════════════════════════════════════════════
+  #
+  # Workers are fresh R sessions. If reticulate initializes before
+  # we can activate the correct environment, it will use the wrong
+  # Python and cannot be switched. We solve this by:
+  # 1. Setting RETICULATE_PYTHON env var (inherited by workers)
+  # 2. Setting RETICULATE_PYTHON_ENV env var as backup
+  # 3. Workers will use these on their first reticulate call
+
+  if (!quiet) {
+    message("Configuring Python environment for parallel workers...")
+  }
+
+  # Activate in parent session first
+  if (!mutateR::check_mutater_env()) {
+    env_activated <- mutateR::activate_mutater_env()
+    if (!env_activated) {
+      stop("Could not activate mutateR Python environment.\n",
+           "Please run mutateR::install_mutater_env() first.")
+    }
+  }
+
+  # Get the Python executable path from the activated environment
+  py_config <- reticulate::py_config()
+  python_path <- py_config$python
+
+  if (is.null(python_path) || !file.exists(python_path)) {
+    stop("Could not determine Python path from activated environment.")
+  }
+
+  # Verify this is the r-mutater environment (not base miniconda)
+  if (!grepl("r-mutater", python_path, fixed = TRUE)) {
+    stop("Python path does not appear to be the r-mutater environment: ", python_path)
+  }
+
+  # Set environment variables - these propagate to worker processes
+  Sys.setenv(RETICULATE_PYTHON = python_path)
+  Sys.setenv(RETICULATE_PYTHON_ENV = "r-mutater")
+
+  if (!quiet) {
+    message("  RETICULATE_PYTHON set to: ", python_path)
+  }
+
+  # Verify TensorFlow is available
+  if (!reticulate::py_module_available("tensorflow")) {
+    stop("TensorFlow not found. Please run mutateR::install_mutater_env(fresh = TRUE)")
+  }
+
+  if (!quiet) {
+    message("  TensorFlow: OK")
+    message("")
+  }
+
   # Setup parallel backend
   old_plan <- future::plan()
   on.exit(future::plan(old_plan), add = TRUE)
@@ -414,28 +469,80 @@ process_batch_parallel <- function(gene_ids,
                                    legacy_methods,
                                    skip_plots) {
 
-  # Worker function that processes a single gene with error handling
-  process_single_gene_safe <- function(gene_id) {
-    tryCatch({
-      result <- .analyze_single_gene(
-        gene_id = gene_id,
-        species = species,
-        genome = genome,
-        nuclease = nuclease,
-        methods = methods,
-        modern_methods = modern_methods,
-        legacy_methods = legacy_methods,
-        transcript_id = NULL,
-        id_type = "symbol",
-        tracr = "Chen2013",
-        deephf_var = "wt_u6",
-        cor_method = "spearman",
-        top_n = c(10, 20, 50),
-        generate_plots = !skip_plots,
-        quiet = TRUE
-      )
+  # Capture the Python path from the parent environment
+  python_path <- Sys.getenv("RETICULATE_PYTHON")
 
-      # Slim down result to save memory/disk if plots skipped
+  # Determine BSgenome package name for future.packages
+  genome_pkg <- class(genome)[1]
+
+  # Worker function
+  process_single_gene_safe <- function(gene_id) {
+
+    # ══════════════════════════════════════════════════════════════
+    # Ensure correct Python environment
+    # ══════════════════════════════════════════════════════════════
+
+    if (!reticulate::py_available(initialize = FALSE)) {
+      if (nzchar(python_path) && file.exists(python_path)) {
+        Sys.setenv(RETICULATE_PYTHON = python_path)
+      }
+    }
+
+    env_ready <- tryCatch({
+      if (!mutateR::check_mutater_env()) {
+        mutateR::activate_mutater_env()
+      } else {
+        TRUE
+      }
+    }, error = function(e) {
+      FALSE
+    })
+
+    if (!env_ready) {
+      if (reticulate::py_available()) {
+        current_py <- tryCatch(reticulate::py_config()$python, error = function(e) "")
+        if (!grepl("r-mutater", current_py)) {
+          return(list(
+            error = TRUE,
+            message = paste0("Wrong Python environment: ", current_py),
+            gene_id = gene_id
+          ))
+        }
+      } else {
+        return(list(
+          error = TRUE,
+          message = "Failed to initialize Python environment in worker",
+          gene_id = gene_id
+        ))
+      }
+    }
+
+    # ══════════════════════════════════════════════════════════════
+    # Process gene (with suppressed messages)
+    # ══════════════════════════════════════════════════════════════
+
+    tryCatch({
+      # Suppress verbose messages from mutateR scoring functions
+      result <- suppressMessages(suppressWarnings({
+        .analyze_single_gene(
+          gene_id = gene_id,
+          species = species,
+          genome = genome,
+          nuclease = nuclease,
+          methods = methods,
+          modern_methods = modern_methods,
+          legacy_methods = legacy_methods,
+          transcript_id = NULL,
+          id_type = "symbol",
+          tracr = "Chen2013",
+          deephf_var = "wt_u6",
+          cor_method = "spearman",
+          top_n = c(10, 20, 50),
+          generate_plots = !skip_plots,
+          quiet = TRUE
+        )
+      }))
+
       if (skip_plots) {
         result$plots <- NULL
       }
@@ -451,15 +558,12 @@ process_batch_parallel <- function(gene_ids,
     })
   }
 
-  # Determine BSgenome package name for future.packages
-  genome_pkg <- class(genome)[1]
-
   # Run in parallel
   results <- future.apply::future_lapply(
     gene_ids,
     process_single_gene_safe,
     future.seed = TRUE,
-    future.packages = c("mutateR", genome_pkg)
+    future.packages = c("mutateR", genome_pkg, "reticulate")
   )
 
   names(results) <- gene_ids
