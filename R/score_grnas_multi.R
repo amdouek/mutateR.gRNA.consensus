@@ -19,7 +19,7 @@
 #'   - One column per scoring method containing raw scores
 #'
 #' @examples
-#' \dontrun
+#' \dontrun{
 #' library(BSgenome.Hsapiens.UCSC.hg38)
 #'
 #' # Get gRNA sites
