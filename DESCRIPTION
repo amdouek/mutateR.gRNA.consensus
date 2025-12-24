@@ -4,7 +4,11 @@ Version: 0.0.0.9000
 Authors@R: 
     person("Alon", "Douek", , "Alon.Douek@monash.edu", role = c("aut", "cre"))
 Description: A package containing utilities to study the behaviour of on-target gRNA scoring method implemented in mutateR
-Imports: mutateR
+Imports: 
+    future,
+    future.apply,
+    ggplot2,
+    mutateR
 Remotes: amdouek/mutateR
 License: `use_gpl3_license()`
 Encoding: UTF-8
@@ -12,3 +16,6 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
 URL: https://github.com/amdouek/mutateR.gRNA.consensus
 BugReports: https://github.com/amdouek/mutateR.gRNA.consensus/issues
+Suggests: 
+    shapviz,
+    xgboost
