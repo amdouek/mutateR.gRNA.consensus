@@ -3,12 +3,35 @@ Title: Cross-Methodology On-Target gRNA Scoring Feature Analyses
 Version: 0.0.0.9000
 Authors@R: 
     person("Alon", "Douek", , "Alon.Douek@monash.edu", role = c("aut", "cre"))
-Description: A package containing utilities to study the behaviour of on-target gRNA scoring method implemented in mutateR
+Description: Extends mutateR with tools for comparing CRISPR gRNA on-target 
+    scoring methods, analyzing agreement/disagreement between RuleSet1, 
+    DeepSpCas9, RuleSet3, and DeepHF (Cas9) or DeepCpf1 and enPAM+GB (Cas12a).
+    Includes SHAP-based feature importance analysis to identify sequence 
+    features driving scoring method predictions and disagreements. Supports
+    exome-scale parallel analysis with checkpointing and fault tolerance.
+Depends: R(>= 4.2.0)
 Imports: 
+    mutateR,
+    ggplot2 (>= 3.4.0),
+    stringr,
+    rlang,
+    stats,
+    utils,
     future,
     future.apply,
-    ggplot2,
-    mutateR
+    xgboost,
+    shapviz (>= 0.9.0)
+Suggests: 
+    BSgenome.Hsapiens.UCSC.hg38,
+    BSgenome.Mmusculus.UCSC.mm10,
+    biomaRt,
+    ggrastr,
+    patchwork,
+    tidyr,
+    scales,
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown
 Remotes: amdouek/mutateR
 License: `use_gpl3_license()`
 Encoding: UTF-8
@@ -16,6 +39,5 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
 URL: https://github.com/amdouek/mutateR.gRNA.consensus
 BugReports: https://github.com/amdouek/mutateR.gRNA.consensus/issues
-Suggests: 
-    shapviz,
-    xgboost
+
+
