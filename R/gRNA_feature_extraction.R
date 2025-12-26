@@ -1,12 +1,3 @@
-#' @title gRNA Feature Extraction
-#' @description
-#' Computes sequence-based features for gRNA SHAP analysis.
-#' Features include compositional, positional, structural, and thermodynamic properties.
-#'
-#' @name gRNA_feature_extraction
-NULL
-
-
 #' Extract sequence features for SHAP analysis
 #'
 #' Computes a comprehensive set of sequence-based features for each gRNA
@@ -86,10 +77,7 @@ extract_grna_features <- function(scores_df) {
     stringsAsFactors = FALSE
   )
 
-  # ═══════════════════════════════════════════════════════════════
   # 1. Global GC Composition
-  # ═══════════════════════════════════════════════════════════════
-
   features$gc_content <- vapply(seqs, function(s) {
     (stringr::str_count(s, "G") + stringr::str_count(s, "C")) / nchar(s)
   }, numeric(1))
@@ -98,10 +86,7 @@ extract_grna_features <- function(scores_df) {
     stringr::str_count(s, "G") + stringr::str_count(s, "C")
   }, numeric(1))
 
-  # ═══════════════════════════════════════════════════════════════
   # 2. Regional GC (PAM-proximal vs PAM-distal)
-  # ═══════════════════════════════════════════════════════════════
-
   features$gc_proximal <- vapply(seqs, function(s) {
     # Last 10 nt (PAM-proximal for Cas9, positions 11-20)
     seq_len <- nchar(s)
@@ -117,10 +102,7 @@ extract_grna_features <- function(scores_df) {
     (stringr::str_count(dist, "G") + stringr::str_count(dist, "C")) / 10
   }, numeric(1))
 
-  # ═══════════════════════════════════════════════════════════════
   # 3. Homopolymer Runs
-  # ═══════════════════════════════════════════════════════════════
-
   features$max_homopolymer <- vapply(seqs, function(s) {
     runs <- gregexpr("(.)\\1+", s, perl = TRUE)[[1]]
     if (runs[1] == -1) return(1L)
@@ -132,10 +114,7 @@ extract_grna_features <- function(scores_df) {
   features$has_polyG <- as.integer(grepl("GGGG", seqs))
   features$has_polyC <- as.integer(grepl("CCCC", seqs))
 
-  # ═══════════════════════════════════════════════════════════════
   # 4. Dinucleotide Frequencies
-  # ═══════════════════════════════════════════════════════════════
-
   dinucs <- c("AA", "AT", "AG", "AC",
               "TA", "TT", "TG", "TC",
               "GA", "GT", "GG", "GC",
@@ -147,10 +126,7 @@ extract_grna_features <- function(scores_df) {
     }, numeric(1))
   }
 
-  # ═══════════════════════════════════════════════════════════════
   # 5. Position-Specific Nucleotides
-  # ═══════════════════════════════════════════════════════════════
-
   # All 20 positions for Cas9
   for (pos in 1:20) {
     for (nuc in c("A", "T", "G", "C")) {
@@ -161,10 +137,7 @@ extract_grna_features <- function(scores_df) {
     }
   }
 
-  # ═══════════════════════════════════════════════════════════════
   # 6. Thermodynamic Proxies
-  # ═══════════════════════════════════════════════════════════════
-
   # Wallace rule approximation for Tm
   # Tm = 2(A+T) + 4(G+C) for oligos < 14 nt
   # For longer oligos this is a rough proxy
@@ -174,10 +147,7 @@ extract_grna_features <- function(scores_df) {
     2 * at + 4 * gc
   }, numeric(1))
 
-  # ═══════════════════════════════════════════════════════════════
   # 7. Self-Complementarity Score
-  # ═══════════════════════════════════════════════════════════════
-
   features$self_complement_score <- vapply(seqs, function(s) {
     # Count matching dinucleotides between sequence and its reverse complement
     rc <- chartr("ATGC", "TACG", s)
@@ -187,10 +157,7 @@ extract_grna_features <- function(scores_df) {
     }, integer(1)))
   }, numeric(1))
 
-  # ═══════════════════════════════════════════════════════════════
   # 8. Linguistic Complexity
-  # ═══════════════════════════════════════════════════════════════
-
   features$linguistic_complexity <- vapply(seqs, function(s) {
     n_chars <- nchar(s)
     if (n_chars < 3) return(NA_real_)
@@ -205,10 +172,7 @@ extract_grna_features <- function(scores_df) {
     observed / expected
   }, numeric(1))
 
-  # ═══════════════════════════════════════════════════════════════
   # 9. PAM-Adjacent Context (Position 20 = pre-PAM)
-  # ═══════════════════════════════════════════════════════════════
-
   pre_pam_nuc <- vapply(seqs, function(s) {
     substr(s, nchar(s), nchar(s))
   }, character(1))
@@ -217,10 +181,7 @@ extract_grna_features <- function(scores_df) {
     features[[paste0("pre_pam_", nuc)]] <- as.integer(pre_pam_nuc == nuc)
   }
 
-  # ═══════════════════════════════════════════════════════════════
   # 10. Exon Position (from input)
-  # ═══════════════════════════════════════════════════════════════
-
   if ("exon_rank" %in% names(scores_df)) {
     features$exon_rank <- scores_df$exon_rank
   }
@@ -242,7 +203,7 @@ extract_grna_features <- function(scores_df) {
 #' feature_names <- get_feature_names()
 #' length(feature_names)
 #'
-#' # Categorize features
+#' # Categorise features
 #' positional <- grep("^pos\\d+_", feature_names, value = TRUE)
 #' dinuc <- grep("^freq_", feature_names, value = TRUE)
 #'
@@ -291,7 +252,7 @@ get_feature_names <- function(include_id = FALSE) {
 }
 
 
-#' Categorize features by type
+#' Categorise features by type
 #'
 #' Returns a named list grouping feature names by their category.
 #' Useful for understanding feature importance results.

@@ -89,10 +89,7 @@ run_exome_analysis <- function(gene_ids,
                                skip_plots = TRUE,
                                quiet = FALSE) {
 
-  # ═══════════════════════════════════════════════════════════════
   # Validation and Setup
-  # ═══════════════════════════════════════════════════════════════
-
   nuclease <- match.arg(nuclease)
 
   # Check required packages
@@ -141,10 +138,7 @@ run_exome_analysis <- function(gene_ids,
   progress_file <- file.path(output_dir, "progress.rds")
   failed_file <- file.path(output_dir, "failed_genes.rds")
 
-  # ═══════════════════════════════════════════════════════════════
   # Progress Management
-  # ═══════════════════════════════════════════════════════════════
-
   if (resume && file.exists(progress_file)) {
     progress <- readRDS(progress_file)
 
@@ -196,10 +190,7 @@ run_exome_analysis <- function(gene_ids,
     return(invisible(final_path))
   }
 
-  # ═══════════════════════════════════════════════════════════════
   # Print Analysis Plan
-  # ═══════════════════════════════════════════════════════════════
-
   if (!quiet) {
     cat("\n")
     cat("╔═══════════════════════════════════════════════════════════════╗\n")
@@ -238,10 +229,7 @@ run_exome_analysis <- function(gene_ids,
     cat("\n")
   }
 
-  # ═══════════════════════════════════════════════════════════════
   # Batch Processing
-  # ═══════════════════════════════════════════════════════════════
-
   # Split remaining genes into batches
   n_remaining <- length(remaining_genes)
   batch_indices <- split(seq_len(n_remaining),
@@ -258,11 +246,9 @@ run_exome_analysis <- function(gene_ids,
         start_batch_num, " to ", start_batch_num + n_batches - 1, ")\n\n", sep = "")
   }
 
-  # ═══════════════════════════════════════════════════════════════
   # Python Environment Setup (CRITICAL FOR PARALLEL WORKERS)
-  # ═══════════════════════════════════════════════════════════════
   #
-  # Workers are fresh R sessions. If reticulate initializes before
+  # Workers are fresh R sessions. If reticulate initialises before
   # we can activate the correct environment, it will use the wrong
   # Python and cannot be switched. We solve this by:
   # 1. Setting RETICULATE_PYTHON env var (inherited by workers)
@@ -402,10 +388,7 @@ run_exome_analysis <- function(gene_ids,
     gc(verbose = FALSE)
   }
 
-  # ═══════════════════════════════════════════════════════════════
   # Finalisation
-  # ═══════════════════════════════════════════════════════════════
-
   total_elapsed <- as.numeric(difftime(Sys.time(), progress$started_at, units = "hours"))
 
   if (!quiet) {
@@ -478,10 +461,7 @@ process_batch_parallel <- function(gene_ids,
   # Worker function
   process_single_gene_safe <- function(gene_id) {
 
-    # ══════════════════════════════════════════════════════════════
     # Ensure correct Python environment
-    # ══════════════════════════════════════════════════════════════
-
     if (!reticulate::py_available(initialize = FALSE)) {
       if (nzchar(python_path) && file.exists(python_path)) {
         Sys.setenv(RETICULATE_PYTHON = python_path)
@@ -517,10 +497,7 @@ process_batch_parallel <- function(gene_ids,
       }
     }
 
-    # ══════════════════════════════════════════════════════════════
-    # Process gene (with suppressed messages)
-    # ══════════════════════════════════════════════════════════════
-
+    # Process gene
     tryCatch({
       # Suppress verbose messages from mutateR scoring functions
       result <- suppressMessages(suppressWarnings({

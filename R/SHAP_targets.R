@@ -1,14 +1,4 @@
-#' @title SHAP Target Variable Computation
-#' @description
-#' Computes target variables for SHAP analysis with tiered handling of
-#' modern vs. legacy scoring methods. Provides multiple consensus metrics
-#' for flexible analysis of gRNA quality and method agreement.
-#'
-#' @name SHAP_targets
-NULL
-
-
-#' Compute target variables for SHAP analysis (Tiered Version)
+#' Compute target variables for tiered SHAP analysis
 #'
 #' Calculates outcome variables with explicit handling of modern vs. legacy
 #' methods. Provides tiered consensus metrics for flexible analysis that
@@ -77,7 +67,7 @@ NULL
 #' # Use modern quality for primary analysis
 #' y <- targets$quality_percentile_modern
 #'
-#' # Analyze legacy divergence separately
+#' # Analyse legacy divergence separately
 #' y_legacy <- targets$ruleset1_divergence
 #' }
 #'
@@ -91,10 +81,7 @@ compute_shap_targets <- function(scores_df,
                                  modern_methods = NULL,
                                  legacy_methods = NULL) {
 
-  # ═══════════════════════════════════════════════════════════════
   # Identify Available Methods
-  # ═══════════════════════════════════════════════════════════════
-
   all_available <- attr(scores_df, "methods")
   nuclease <- attr(scores_df, "nuclease")
 
@@ -106,10 +93,7 @@ compute_shap_targets <- function(scores_df,
     all_available <- all_available[vapply(scores_df[all_available], is.numeric, logical(1))]
   }
 
-  # ═══════════════════════════════════════════════════════════════
   # Set Default Method Classification
-  # ═══════════════════════════════════════════════════════════════
-
   if (is.null(modern_methods)) {
     if (is.null(nuclease) || nuclease == "Cas9") {
       modern_methods <- intersect(c("deepspcas9", "deephf", "ruleset3"), all_available)
@@ -139,10 +123,7 @@ compute_shap_targets <- function(scores_df,
     stringsAsFactors = FALSE
   )
 
-  # ═══════════════════════════════════════════════════════════════
   # TIER 1: Modern Method Consensus
-  # ═══════════════════════════════════════════════════════════════
-
   if (length(modern_methods) >= 2) {
     modern_scores <- scores_df[, modern_methods, drop = FALSE]
 
@@ -188,10 +169,7 @@ compute_shap_targets <- function(scores_df,
     }
   }
 
-  # ═══════════════════════════════════════════════════════════════
   # TIER 2: Robust Full Consensus (All Methods)
-  # ═══════════════════════════════════════════════════════════════
-
   all_scores <- scores_df[, all_methods, drop = FALSE]
 
   # Normalize all scores
@@ -220,10 +198,7 @@ compute_shap_targets <- function(scores_df,
   targets$quality_percentile_all <- 100 * (1 - (targets$mean_rank_all - 1) / (n_grnas - 1))
   targets$quality_percentile_robust <- 100 * (1 - (targets$median_rank_all - 1) / (n_grnas - 1))
 
-  # ═══════════════════════════════════════════════════════════════
   # TIER 3: Legacy Divergence
-  # ═══════════════════════════════════════════════════════════════
-
   if (length(legacy_methods) >= 1 && length(modern_methods) >= 2) {
     for (legacy in legacy_methods) {
       legacy_rank <- all_ranks[[legacy]]
@@ -247,10 +222,7 @@ compute_shap_targets <- function(scores_df,
     }
   }
 
-  # ═══════════════════════════════════════════════════════════════
   # TIER 4: Binary Selection Flags
-  # ═══════════════════════════════════════════════════════════════
-
   # Modern method top-N flags
   if ("max_rank_modern" %in% names(targets)) {
     targets$is_top20_modern <- as.integer(targets$max_rank_modern <= 20)
@@ -281,19 +253,13 @@ compute_shap_targets <- function(scores_df,
     }
   }
 
-  # ═══════════════════════════════════════════════════════════════
   # Individual Method Scores and Ranks
-  # ═══════════════════════════════════════════════════════════════
-
   for (m in all_methods) {
     targets[[paste0("score_", m)]] <- all_scores[[m]]
     targets[[paste0("rank_", m)]] <- all_ranks[[m]]
   }
 
-  # ═══════════════════════════════════════════════════════════════
   # Add Metadata as Attributes
-  # ═══════════════════════════════════════════════════════════════
-
   attr(targets, "modern_methods") <- modern_methods
   attr(targets, "legacy_methods") <- legacy_methods
   attr(targets, "n_grnas") <- n_grnas

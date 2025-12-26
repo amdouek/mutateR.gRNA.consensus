@@ -19,7 +19,7 @@ NULL
 #'   \describe{
 #'     \item{"quality_percentile_modern"}{Modern method consensus (recommended primary)}
 #'     \item{"quality_percentile_robust"}{Outlier-resistant quality}
-#'     \item{"discordance_modern"}{Modern method disagreement}
+#'     \item{"discordance_modern"}{Disagreement across modern methods}
 #'     \item{"ruleset1_divergence"}{Legacy method divergence}
 #'     \item{"score_<method>"}{Individual method score}
 #'   }
@@ -29,7 +29,7 @@ NULL
 #'        Default: c("ruleset1")
 #' @param n_top_features Integer. Number of top features to display (default 20)
 #' @param xgb_params List. XGBoost parameters (optional, uses sensible defaults)
-#' @param rasterize Logical. Rasterize beeswarm points for large datasets.
+#' @param rasterize Logical. Rasterise beeswarm points for large datasets.
 #'        Default NULL means auto-determine (TRUE if n > 5000).
 #' @param raster_dpi Integer. DPI for rasterized layers (default 300).
 #' @param subsample_beeswarm Integer or NULL. If set, subsample points for beeswarm plot.
@@ -112,10 +112,7 @@ analyze_feature_importance <- function(batch_result,
                                        subsample_beeswarm = NULL,
                                        quiet = FALSE) {
 
-  # ═══════════════════════════════════════════════════════════════
   # Check Dependencies
-  # ═══════════════════════════════════════════════════════════════
-
   if (!requireNamespace("xgboost", quietly = TRUE)) {
     stop("Package 'xgboost' is required. Install with: install.packages('xgboost')")
   }
@@ -124,10 +121,7 @@ analyze_feature_importance <- function(batch_result,
     stop("Package 'shapviz' is required. Install with: install.packages('shapviz')")
   }
 
-  # ═══════════════════════════════════════════════════════════════
   # 1. Aggregate Data Across Genes
-  # ═══════════════════════════════════════════════════════════════
-
   if (!quiet) message("Aggregating data across genes...")
 
   # Handle single analysis object
@@ -177,10 +171,7 @@ analyze_feature_importance <- function(batch_result,
             " gRNAs from ", n_genes, " genes")
   }
 
-  # ═══════════════════════════════════════════════════════════════
   # 2. Prepare Model Data
-  # ═══════════════════════════════════════════════════════════════
-
   feature_cols <- setdiff(names(features_df), c("grna_id", "gene"))
   X <- as.matrix(features_df[, feature_cols])
 
@@ -217,10 +208,7 @@ analyze_feature_importance <- function(batch_result,
     message("Training on ", format(n_gRNAs, big.mark = ","), " complete observations")
   }
 
-  # ═══════════════════════════════════════════════════════════════
   # 3. Train XGBoost Model
-  # ═══════════════════════════════════════════════════════════════
-
   if (!quiet) message("Training gradient boosting model...")
 
   dtrain <- xgboost::xgb.DMatrix(data = X, label = y)
@@ -266,18 +254,12 @@ analyze_feature_importance <- function(batch_result,
     verbose = 0
   )
 
-  # ═══════════════════════════════════════════════════════════════
   # 4. Compute SHAP Values
-  # ═══════════════════════════════════════════════════════════════
-
   if (!quiet) message("Computing SHAP values...")
 
   shap_values <- shapviz::shapviz(model, X_pred = X, X = X)
 
-  # ═══════════════════════════════════════════════════════════════
   # 5. Compute Model Performance Metrics
-  # ═══════════════════════════════════════════════════════════════
-
   predictions <- predict(model, X)
 
   # R-squared
@@ -291,10 +273,7 @@ analyze_feature_importance <- function(batch_result,
   # Spearman correlation
   pred_cor <- cor(y, predictions, method = "spearman")
 
-  # ═══════════════════════════════════════════════════════════════
-  # 6. Generate Visualizations
-  # ═══════════════════════════════════════════════════════════════
-
+  # 6. Generate Visualisations
   if (!quiet) message("Generating visualizations...")
 
   plots <- generate_shap_plots(
@@ -312,10 +291,7 @@ analyze_feature_importance <- function(batch_result,
     subsample_beeswarm = subsample_beeswarm
   )
 
-  # ═══════════════════════════════════════════════════════════════
   # 7. Extract Feature Importance Table
-  # ═══════════════════════════════════════════════════════════════
-
   shap_matrix <- shapviz::get_shap_values(shap_values)
   mean_abs_shap <- colMeans(abs(shap_matrix))
 
@@ -333,10 +309,7 @@ analyze_feature_importance <- function(batch_result,
   importance_df$mean_shap <- mean_shap[importance_df$feature]
   importance_df$direction <- ifelse(importance_df$mean_shap > 0, "positive", "negative")
 
-  # ═══════════════════════════════════════════════════════════════
   # 8. Return Results
-  # ═══════════════════════════════════════════════════════════════
-
   result <- list(
     model = model,
     shap_values = shap_values,
@@ -379,8 +352,7 @@ analyze_feature_importance <- function(batch_result,
 #' Run tiered SHAP analysis across consensus metrics
 #'
 #' Executes SHAP analysis for multiple target variables representing different
-#' aspects of gRNA quality and method agreement. This enables systematic
-#' comparison of feature importance across analytical perspectives.
+#' aspects of gRNA quality and method agreement.
 #'
 #' @param batch_result A mutateR_consensus_batch object
 #' @param modern_methods Character vector. Modern scoring methods.
@@ -390,7 +362,7 @@ analyze_feature_importance <- function(batch_result,
 #' @param n_top_features Integer. Number of top features to extract (default 25)
 #' @param include_method_specific Logical. Also run SHAP for individual methods (default FALSE)
 #' @param rasterize Logical. Rasterize beeswarm plots (default TRUE if n > 5000)
-#' @param raster_dpi Integer. DPI for rasterization (default 300)
+#' @param raster_dpi Integer. DPI for rasterisation (default 300)
 #' @param quiet Logical. Suppress progress messages (default FALSE)
 #'
 #' @return A list of class "mutateR_tiered_shap" containing:
@@ -408,14 +380,12 @@ analyze_feature_importance <- function(batch_result,
 #' The four tiers address different analytical questions:
 #'
 #' \strong{modern_quality:} What features predict high efficacy according to
-#' modern deep learning methods? This is the primary analysis for understanding
-#' gRNA design rules.
+#' modern deep learning methods?
 #'
 #' \strong{modern_discord:} What features cause modern methods to disagree?
-#' Identifies edge cases and potential model-specific biases.
 #'
-#' \strong{legacy_divergence:} What features does RuleSet1 "miss" that modern
-#' methods capture? Reveals what the field has learned since 2014.
+#' \strong{legacy_divergence:} What features does legacy methods "miss" that modern
+#' methods capture?
 #'
 #' \strong{robust_quality:} What features predict quality using outlier-resistant
 #' statistics? Provides a conservative consensus view.

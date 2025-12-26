@@ -1,14 +1,3 @@
-#' @title SHAP Ablation Analysis
-#' @description
-#' Ablation analysis functions for understanding gRNA features in different
-#' experimental contexts. Enables removal of transcription-related features
-#' to simulate synthetic gRNA / RNP delivery contexts where Pol III
-#' transcription is not a factor.
-#'
-#' @name SHAP_ablation
-NULL
-
-
 #' Get list of transcription-related features
 #'
 #' Returns feature names that are related to gRNA transcription efficiency
@@ -17,29 +6,21 @@ NULL
 #'
 #' @param include_extended Logical. Include extended 5' region features (positions 2-3).
 #'        Default TRUE.
-#'
 #' @return Character vector of transcription-related feature names
-#'
 #' @details
-#' Features are classified as transcription-related if they:
-#' \itemize{
-#'   \item Affect Pol III termination (TT dinucleotides, poly-T runs)
-#'   \item Affect transcription initiation (position 1 nucleotide for U6/T7)
-#'   \item Affect transcript processing/stability (5' region)
-#' }
 #'
 #' \strong{Core transcription features:}
 #' \itemize{
-#'   \item \code{freq_TT}: TT dinucleotide frequency (Pol III terminator signal)
-#'   \item \code{has_polyT}: Presence of TTTT run
-#'   \item \code{pos1_*}: Position 1 nucleotides (U6 +1 preference for G)
-#'   \item \code{max_homopolymer}: Longest homopolymer run
+#'   \item \code{freq_TT}
+#'   \item \code{has_polyT}
+#'   \item \code{pos1_N}
+#'   \item \code{max_homopolymer}
 #' }
 #'
 #' \strong{Extended features (if include_extended = TRUE):}
 #' \itemize{
-#'   \item \code{pos2_*}, \code{pos3_*}: Extended 5' region affecting processing
-#'   \item \code{has_polyA/G/C}: Other homopolymer runs
+#'   \item \code{pos2_N}, \code{pos3_N}
+#'   \item \code{has_polyA/G/C}
 #' }
 #'
 #' @examples
@@ -56,24 +37,22 @@ NULL
 #' intrinsic_features <- setdiff(all_features, tx_all)
 #'
 #' @seealso
-#' \code{\link{run_transcription_ablation}} for ablation analysis,
-#' \code{\link{get_feature_categories}} for all feature categories
+#' \code{\link{run_transcription_ablation}}
+#' \code{\link{get_feature_categories}}
 #'
 #' @export
 get_transcription_features <- function(include_extended = TRUE) {
 
-  # Core transcription features (always included)
+  # Core transcription features
   core_features <- c(
     # Pol III termination signals
     "freq_TT",
     "has_polyT",
-
     # Position 1 (U6/T7 +1 preference)
     "pos1_A",
     "pos1_T",
     "pos1_G",
     "pos1_C",
-
     # Homopolymer runs (affect transcription)
     "max_homopolymer"
   )
@@ -82,14 +61,13 @@ get_transcription_features <- function(include_extended = TRUE) {
     return(core_features)
   }
 
-  # Extended features (5' region and other homopolymers)
+  # Extended features
   extended_features <- c(
     # Other homopolymer indicators
     "has_polyA",
     "has_polyG",
     "has_polyC",
-
-    # 5' region (positions 2-3 affect processing)
+    # 5' region
     "pos2_A",
     "pos2_T",
     "pos2_G",
@@ -106,9 +84,8 @@ get_transcription_features <- function(include_extended = TRUE) {
 
 #' Get list of intrinsic recognition features
 #'
-#' Returns feature names related to intrinsic Cas9:gRNA:DNA recognition,
-#' excluding transcription-related features. These features should be
-#' predictive regardless of gRNA delivery method.
+#' Returns feature names related to intrinsic Cas9:gRNA:DNA recognition
+#' and not gRNA transcription.
 #'
 #' @return Character vector of intrinsic recognition feature names
 #'
@@ -126,7 +103,7 @@ get_transcription_features <- function(include_extended = TRUE) {
 #' intrinsic <- get_intrinsic_features()
 #' length(intrinsic)
 #'
-#' @seealso \code{\link{get_transcription_features}} for transcription features
+#' @seealso \code{\link{get_transcription_features}}
 #'
 #' @export
 get_intrinsic_features <- function() {
@@ -138,12 +115,10 @@ get_intrinsic_features <- function() {
 }
 
 
-#' Run ablation analysis removing transcription features
+#' Run SHAP analysis removing transcription features from feature list
 #'
 #' Performs SHAP analysis with transcription-related features removed,
 #' simulating the feature importance profile for synthetic gRNA delivery.
-#' This helps identify which features matter for intrinsic Cas9:gRNA:DNA
-#' recognition, separate from transcription efficiency.
 #'
 #' @param batch_result A mutateR_consensus_batch object
 #' @param target Character. Target variable to model.
@@ -166,22 +141,14 @@ get_intrinsic_features <- function() {
 #'   }
 #'
 #' @details
-#' The ablation analysis addresses a key limitation of existing training data:
-#' most large-scale CRISPR screens use plasmid or lentiviral delivery where
-#' gRNA expression from U6/H1 promoters is a major determinant of activity.
-#'
 #' Features like \code{freq_TT} (Pol III termination), \code{pos1_C} (poor U6
 #' initiation), and \code{max_homopolymer} dominate standard SHAP analyses
-#' because they affect transcription, not intrinsic Cas9 activity.
+#' because they affect transcription, not intrinsic Cas9 activity. This analysis
+#' removes transcription-relevant factors to 'unmask' other important elements.
 #'
-#' By removing these features, we can ask: "What would predict gRNA efficacy
-#' if transcription weren't a factor?" This is directly relevant for:
-#' \itemize{
-#'   \item Synthetic gRNA delivery
-#'   \item RNP (ribonucleoprotein) delivery
-#'   \item In vitro Cas9 activity assays
-#'   \item Therapeutic applications avoiding DNA delivery
-#' }
+#' Note: This is a simulated experimental framework, which should be interpreted
+#' with caution. The gold standard is a gRNA efficiency dataset from RNPs (i.e.
+#' not transcribed).
 #'
 #' @section Comparison with Full Analysis:
 #' After running ablation, compare with full analysis:
@@ -456,10 +423,7 @@ analyze_feature_importance_ablated <- function(batch_result,
     stop("Package 'shapviz' is required.")
   }
 
-  # ═══════════════════════════════════════════════════════════════
   # Handle Single Analysis Object
-  # ═══════════════════════════════════════════════════════════════
-
   if (inherits(batch_result, "mutateR_consensus_analysis")) {
     gene_name <- batch_result$metadata$gene_symbol %||%
       batch_result$metadata$gene_id %||%
@@ -471,10 +435,7 @@ analyze_feature_importance_ablated <- function(batch_result,
     )
   }
 
-  # ═══════════════════════════════════════════════════════════════
   # Aggregate Data
-  # ═══════════════════════════════════════════════════════════════
-
   if (!quiet) message("Aggregating data across genes...")
 
   all_features <- list()
@@ -505,10 +466,7 @@ analyze_feature_importance_ablated <- function(batch_result,
   targets_df <- do.call(rbind, all_targets)
   n_genes <- length(all_features)
 
-  # ═══════════════════════════════════════════════════════════════
   # Prepare Data WITH ABLATION
-  # ═══════════════════════════════════════════════════════════════
-
   feature_cols <- setdiff(names(features_df), c("grna_id", "gene"))
 
   # Check which excluded features actually exist
@@ -534,7 +492,7 @@ analyze_feature_importance_ablated <- function(batch_result,
   X <- as.matrix(features_df[, feature_cols])
   y <- targets_df[[target]]
 
-  # Remove rows with NA
+  # Drop NA rows
   valid <- complete.cases(X) & !is.na(y)
   X <- X[valid, , drop = FALSE]
   y <- y[valid]
@@ -547,10 +505,7 @@ analyze_feature_importance_ablated <- function(batch_result,
     message("Training on ", format(n_gRNAs, big.mark = ","), " observations")
   }
 
-  # ═══════════════════════════════════════════════════════════════
-  # Train XGBoost Model
-  # ═══════════════════════════════════════════════════════════════
-
+  # Train XGBoost model
   if (!quiet) message("Training gradient boosting model...")
 
   dtrain <- xgboost::xgb.DMatrix(data = X, label = y)
@@ -586,18 +541,12 @@ analyze_feature_importance_ablated <- function(batch_result,
     verbose = 0
   )
 
-  # ═══════════════════════════════════════════════════════════════
   # Compute SHAP Values
-  # ═══════════════════════════════════════════════════════════════
-
   if (!quiet) message("Computing SHAP values...")
 
   shap_values <- shapviz::shapviz(model, X_pred = X, X = X)
 
-  # ═══════════════════════════════════════════════════════════════
   # Model Performance
-  # ═══════════════════════════════════════════════════════════════
-
   predictions <- predict(model, X)
 
   ss_res <- sum((y - predictions)^2)
@@ -606,10 +555,7 @@ analyze_feature_importance_ablated <- function(batch_result,
   rmse <- sqrt(mean((y - predictions)^2))
   pred_cor <- cor(y, predictions, method = "spearman")
 
-  # ═══════════════════════════════════════════════════════════════
   # Generate Plots
-  # ═══════════════════════════════════════════════════════════════
-
   if (!quiet) message("Generating visualizations...")
 
   plots <- generate_shap_plots(
@@ -626,10 +572,7 @@ analyze_feature_importance_ablated <- function(batch_result,
     raster_dpi = raster_dpi
   )
 
-  # ═══════════════════════════════════════════════════════════════
   # Feature Importance
-  # ═══════════════════════════════════════════════════════════════
-
   shap_matrix <- shapviz::get_shap_values(shap_values)
   mean_abs_shap <- colMeans(abs(shap_matrix))
 
@@ -646,10 +589,7 @@ analyze_feature_importance_ablated <- function(batch_result,
   importance_df$direction <- ifelse(importance_df$mean_shap > 0, "positive", "negative")
   rownames(importance_df) <- NULL
 
-  # ═══════════════════════════════════════════════════════════════
   # Return Result
-  # ═══════════════════════════════════════════════════════════════
-
   result <- list(
     model = model,
     shap_values = shap_values,
@@ -745,10 +685,7 @@ compare_full_vs_ablated <- function(batch_result,
     cat(paste(rep("\u2550", 63), collapse = ""), "\n\n")
   }
 
-  # ═══════════════════════════════════════════════════════════════
   # Run Full Analysis
-  # ═══════════════════════════════════════════════════════════════
-
   if (!quiet) cat("Running full analysis...\n")
 
   full_shap <- analyze_feature_importance(
@@ -764,10 +701,7 @@ compare_full_vs_ablated <- function(batch_result,
     cat("  Full model R\u00B2: ", round(full_shap$performance$r_squared, 3), "\n\n", sep = "")
   }
 
-  # ═══════════════════════════════════════════════════════════════
   # Run Ablated Analysis
-  # ═══════════════════════════════════════════════════════════════
-
   if (!quiet) cat("Running ablated analysis (", ablation_type, ")...\n", sep = "")
 
   # Determine features to exclude based on ablation type
@@ -803,10 +737,7 @@ compare_full_vs_ablated <- function(batch_result,
     cat("  Ablated model R\u00B2: ", round(ablated_shap$performance$r_squared, 3), "\n\n", sep = "")
   }
 
-  # ═══════════════════════════════════════════════════════════════
   # Compare Results
-  # ═══════════════════════════════════════════════════════════════
-
   if (!quiet) cat("Comparing results...\n")
 
   comparison <- compare_shap_analyses(
@@ -823,17 +754,14 @@ compare_full_vs_ablated <- function(batch_result,
   r2_change <- r2_ablated - r2_full
   r2_pct_change <- 100 * r2_change / r2_full
 
-  # ═══════════════════════════════════════════════════════════════
   # Generate Summary
-  # ═══════════════════════════════════════════════════════════════
-
-  # Find features that gained importance after ablation
+  ## Find features that gained importance after ablation
   comp_df <- comparison$comparison
   comp_df$rank_change <- comp_df$rank_Full - comp_df$rank_Ablated
   gainers <- comp_df[!is.na(comp_df$rank_change) & comp_df$rank_change > 5, ]
   gainers <- gainers[order(-gainers$rank_change), ]
 
-  # Find features unique to ablated top
+  ## Find features unique to ablated top
   unique_ablated <- comp_df$feature[grepl("Unique to Ablated", comp_df$category)]
 
   summary_text <- sprintf(
@@ -888,10 +816,7 @@ Feature Shifts:
     cat(paste(rep("\u2550", 63), collapse = ""), "\n\n")
   }
 
-  # ═══════════════════════════════════════════════════════════════
   # Return Results
-  # ═══════════════════════════════════════════════════════════════
-
   return(list(
     full = full_shap,
     ablated = ablated_shap,

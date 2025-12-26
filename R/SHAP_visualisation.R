@@ -1,18 +1,6 @@
-#' @title SHAP Visualization Functions
-#' @description
-#' Visualization functions for SHAP analysis results including beeswarm plots,
-#' bar plots, dependence plots, and cross-tier comparisons. Supports rasterization
-#' for large datasets and publication-quality output.
-#'
-#' @name SHAP_visualization
-NULL
-
-
 #' Generate SHAP visualization plots
 #'
-#' Creates beeswarm and bar plots for SHAP feature importance with enhanced
-#' annotations including sample size, model performance, and target interpretation.
-#' Supports rasterization for large datasets to improve rendering performance.
+#' Creates visualisations for SHAP analyses
 #'
 #' @param shap_values A shapviz object containing SHAP values
 #' @param target Character. Target variable name for labeling
@@ -23,9 +11,9 @@ NULL
 #' @param modern_methods Character vector. Modern scoring methods used
 #' @param legacy_methods Character vector. Legacy scoring methods used
 #' @param n_top_features Integer. Number of top features to display (default 25)
-#' @param rasterize Logical. Rasterize beeswarm points (default NULL = auto)
-#' @param raster_dpi Integer. DPI for rasterization (default 300)
-#' @param subsample_beeswarm Integer or NULL. Number of points to subsample for beeswarm
+#' @param rasterize Logical. Rasterise beeswarm points (default NULL = auto)
+#' @param raster_dpi Integer. DPI for rasterisation (default 300)
+#' @param subsample_beeswarm Integer or NULL. Number of points to subsample for beeswarm; used when # gRNAs is >20,000
 #'
 #' @return List of ggplot objects:
 #'   \describe{
@@ -34,12 +22,6 @@ NULL
 #'     \item{waterfall_best}{Waterfall plot for highest-scoring gRNA}
 #'     \item{waterfall_worst}{Waterfall plot for lowest-scoring gRNA}
 #'   }
-#'
-#' @details
-#' For datasets with >5,000 gRNAs, rasterization is automatically enabled to
-#' improve plot rendering performance. For datasets with >20,000 gRNAs,
-#' stratified subsampling is applied to the beeswarm plot while maintaining
-#' the distribution of SHAP values.
 #'
 #' Plot annotations include:
 #' \itemize{
@@ -67,11 +49,8 @@ generate_shap_plots <- function(shap_values,
                                 raster_dpi = 300,
                                 subsample_beeswarm = NULL) {
 
-  # ═══════════════════════════════════════════════════════════════
-  # Determine Rasterization and Subsampling
-  # ═══════════════════════════════════════════════════════════════
-
-  # Auto-determine rasterization based on sample size
+  # Determine Rasterisation and Subsampling
+  # Auto-determine rasterisation based on sample size
   if (is.null(rasterize)) {
     rasterize <- n_gRNAs > 5000
   }
@@ -85,7 +64,7 @@ generate_shap_plots <- function(shap_values,
     }
   }
 
-  # Check for ggrastr package if rasterizing
+  # Check for ggrastr package if rasterising
   has_ggrastr <- requireNamespace("ggrastr", quietly = TRUE)
   if (rasterize && !has_ggrastr) {
     warning("Package 'ggrastr' not available. Install with: install.packages('ggrastr')\n",
@@ -93,10 +72,7 @@ generate_shap_plots <- function(shap_values,
     rasterize <- FALSE
   }
 
-  # ═══════════════════════════════════════════════════════════════
-  # Build Plot Annotations
-  # ═══════════════════════════════════════════════════════════════
-
+    # Build Plot Annotations
   target_interp <- get_target_interpretation(target)
   subtitle <- paste0(
     if (!is.null(target_interp)) paste0(target_interp, "\n") else "",
@@ -120,19 +96,13 @@ generate_shap_plots <- function(shap_values,
 
   plots <- list()
 
-  # ═══════════════════════════════════════════════════════════════
   # Prepare SHAP Values for Beeswarm (with optional subsampling)
-  # ═══════════════════════════════════════════════════════════════
-
   shap_for_beeswarm <- shap_values
   if (!is.null(subsample_beeswarm) && n_gRNAs > subsample_beeswarm) {
     shap_for_beeswarm <- subsample_shap_values(shap_values, subsample_beeswarm)
   }
 
-  # ═══════════════════════════════════════════════════════════════
   # Beeswarm Plot
-  # ═══════════════════════════════════════════════════════════════
-
   plots$beeswarm <- tryCatch({
 
     # Create base beeswarm
@@ -144,8 +114,7 @@ generate_shap_plots <- function(shap_values,
       size = 0.8
     )
 
-    # Apply rasterization if requested and available
-    # Note: ggrastr::rasterise() wraps the plot, not added with +
+    # Apply rasterisation if requested
     if (rasterize && has_ggrastr) {
       p_bee <- ggrastr::rasterise(p_bee, dpi = raster_dpi)
     }
@@ -180,12 +149,8 @@ generate_shap_plots <- function(shap_values,
     NULL
   })
 
-  # ═══════════════════════════════════════════════════════════════
   # Bar Plot
-  # ═══════════════════════════════════════════════════════════════
-
   plots$bar <- tryCatch({
-
     shapviz::sv_importance(
       shap_values,
       kind = "bar",
@@ -211,10 +176,7 @@ generate_shap_plots <- function(shap_values,
     NULL
   })
 
-  # ═══════════════════════════════════════════════════════════════
   # Waterfall Plots for Extreme Examples
-  # ═══════════════════════════════════════════════════════════════
-
   plots$waterfall_best <- tryCatch({
     shap_matrix <- shapviz::get_shap_values(shap_values)
     baseline <- attr(shap_values, "baseline")
@@ -257,9 +219,9 @@ generate_shap_plots <- function(shap_values,
 
 #' Subsample SHAP values with stratification
 #'
-#' Performs stratified subsampling that maintains the distribution of SHAP values
-#' for visualization of very large datasets. Stratification is based on overall
-#' SHAP magnitude to ensure representation across the full range of predictions.
+#' Performs stratified subsampling for visualization of very large datasets.
+#' Stratification is based on overall SHAP magnitude to ensure representation
+#' across the full range of predictions.
 #'
 #' @param shap_values A shapviz object
 #' @param n_subsample Integer. Target number of samples
@@ -407,7 +369,7 @@ save_shap_plots <- function(plots,
 #'        Default "auto" for automatic selection based on interaction strength.
 #' @param ncol Integer. Number of columns in plot grid (default 2)
 #' @param rasterize Logical. Rasterize points for large datasets (default TRUE if n > 5000)
-#' @param raster_dpi Integer. DPI for rasterization (default 300)
+#' @param raster_dpi Integer. DPI for rasterisation (default 300)
 #'
 #' @return A ggplot object (combined with patchwork if available) or list of ggplot objects
 #'
@@ -435,7 +397,7 @@ plot_shap_dependence <- function(shap_result,
     stop("Features not found: ", paste(invalid, collapse = ", "))
   }
 
-  # Auto-determine rasterization
+  # Auto-determine rasterisation
   n_points <- nrow(shap_result$data$X)
   if (is.null(rasterize)) {
     rasterize <- n_points > 5000
@@ -456,7 +418,6 @@ plot_shap_dependence <- function(shap_result,
           plot.title = ggplot2::element_text(size = 11, face = "bold", hjust = 0.5)
         )
 
-      # Rasterize by wrapping the plot, not adding with +
       if (rasterize && has_ggrastr) {
         p <- ggrastr::rasterise(p, dpi = raster_dpi)
       }
@@ -500,7 +461,7 @@ plot_shap_dependence <- function(shap_result,
 
 #' Compare SHAP results between two analyses
 #'
-#' Generates comparison visualizations and statistics for two SHAP analyses.
+#' Generates comparison visualisations and statistics for two SHAP analyses.
 #' Useful for comparing feature importance between targets (e.g., modern quality
 #' vs. legacy divergence) or between different datasets.
 #'
@@ -591,7 +552,7 @@ compare_shap_analyses <- function(shap1, shap2,
   comparison <- comparison[order(comparison$min_rank), ]
   rownames(comparison) <- NULL
 
-  # Create visualization
+  # Create visualisation
   plot_df <- head(comparison, n_features * 2)
   plot_df <- plot_df[plot_df$category != "Less important in both", ]
 
