@@ -2,7 +2,7 @@
 % Please edit documentation in R/SHAP_ablation.R
 \name{run_transcription_ablation}
 \alias{run_transcription_ablation}
-\title{Run ablation analysis removing transcription features}
+\title{Run SHAP analysis removing transcription features from feature list}
 \usage{
 run_transcription_ablation(
   batch_result,
@@ -49,26 +49,16 @@ A mutateR_shap_analysis object with additional ablation metadata:
 \description{
 Performs SHAP analysis with transcription-related features removed,
 simulating the feature importance profile for synthetic gRNA delivery.
-This helps identify which features matter for intrinsic Cas9:gRNA:DNA
-recognition, separate from transcription efficiency.
 }
 \details{
-The ablation analysis addresses a key limitation of existing training data:
-most large-scale CRISPR screens use plasmid or lentiviral delivery where
-gRNA expression from U6/H1 promoters is a major determinant of activity.
-
 Features like \code{freq_TT} (Pol III termination), \code{pos1_C} (poor U6
 initiation), and \code{max_homopolymer} dominate standard SHAP analyses
-because they affect transcription, not intrinsic Cas9 activity.
+because they affect transcription, not intrinsic Cas9 activity. This analysis
+removes transcription-relevant factors to 'unmask' other important elements.
 
-By removing these features, we can ask: "What would predict gRNA efficacy
-if transcription weren't a factor?" This is directly relevant for:
-\itemize{
-\item Synthetic gRNA delivery
-\item RNP (ribonucleoprotein) delivery
-\item In vitro Cas9 activity assays
-\item Therapeutic applications avoiding DNA delivery
-}
+Note: This is a simulated experimental framework, which should be interpreted
+with caution. The gold standard is a gRNA efficiency dataset from RNPs (i.e.
+not transcribed).
 }
 \section{Comparison with Full Analysis}{
 

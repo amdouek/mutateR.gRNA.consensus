@@ -18,6 +18,9 @@
 #' @param methods Character vector. Scoring methods to use. If NULL (default), auto-selects
 #'        based on nuclease type.
 #' @param skip_plots Logical. Skip plot generation for speed (default TRUE).
+#' @param n_genes Integer or NULL (default). If specified,
+#' this number of genes will be randomly selected for processing (instead of all genes).
+#' @param sample_seed Random seed for sample reproducibility (default 42). For use with n_genes.
 #' @param quiet Logical. Suppress progress messages (default FALSE).
 #'
 #' @return Path to final aggregated results file (invisibly).
@@ -87,6 +90,8 @@ run_exome_analysis <- function(gene_ids,
                                nuclease = c("Cas9", "Cas12a", "enCas12a"),
                                methods = NULL,
                                skip_plots = TRUE,
+                               n_genes = NULL,
+                               sample_seed = 42,
                                quiet = FALSE) {
 
   # Validation and Setup
@@ -112,6 +117,15 @@ run_exome_analysis <- function(gene_ids,
 
   # Remove any duplicates
   gene_ids <- unique(gene_ids)
+
+  # Optional gene sampling (for small runs)
+  if (!is.null(n_genes) && n_genes < length(gene_ids)) {
+    if (!quiet) {
+      message("Sampling ", n_genes, " genes from ", length(gene_ids), " total (seed: ", sample_seed, ")")
+    }
+    set.seed(sample_seed)
+    gene_ids <- sample(gene_ids, n_genes)
+  }
 
   # Set default methods based on nuclease
   if (is.null(methods)) {

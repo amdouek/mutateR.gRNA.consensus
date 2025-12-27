@@ -24,7 +24,7 @@ analyze_feature_importance(
 \describe{
 \item{"quality_percentile_modern"}{Modern method consensus (recommended primary)}
 \item{"quality_percentile_robust"}{Outlier-resistant quality}
-\item{"discordance_modern"}{Modern method disagreement}
+\item{"discordance_modern"}{Disagreement across modern methods}
 \item{"ruleset1_divergence"}{Legacy method divergence}
 \item{"score_\if{html}{\out{<method>}}"}{Individual method score}
 }}
@@ -39,7 +39,7 @@ Default: c("ruleset1")}
 
 \item{xgb_params}{List. XGBoost parameters (optional, uses sensible defaults)}
 
-\item{rasterize}{Logical. Rasterize beeswarm points for large datasets.
+\item{rasterize}{Logical. Rasterise beeswarm points for large datasets.
 Default NULL means auto-determine (TRUE if n > 5000).}
 
 \item{raster_dpi}{Integer. DPI for rasterized layers (default 300).}

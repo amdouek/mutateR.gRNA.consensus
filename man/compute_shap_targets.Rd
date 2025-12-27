@@ -2,7 +2,7 @@
 % Please edit documentation in R/SHAP_targets.R
 \name{compute_shap_targets}
 \alias{compute_shap_targets}
-\title{Compute target variables for SHAP analysis (Tiered Version)}
+\title{Compute target variables for tiered SHAP analysis}
 \usage{
 compute_shap_targets(scores_df, modern_methods = NULL, legacy_methods = NULL)
 }
@@ -78,7 +78,7 @@ names(targets)
 # Use modern quality for primary analysis
 y <- targets$quality_percentile_modern
 
-# Analyze legacy divergence separately
+# Analyse legacy divergence separately
 y_legacy <- targets$ruleset1_divergence
 }
 

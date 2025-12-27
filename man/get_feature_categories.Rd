@@ -2,7 +2,7 @@
 % Please edit documentation in R/gRNA_feature_extraction.R
 \name{get_feature_categories}
 \alias{get_feature_categories}
-\title{Categorize features by type}
+\title{Categorise features by type}
 \usage{
 get_feature_categories()
 }

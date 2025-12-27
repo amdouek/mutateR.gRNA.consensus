@@ -10,9 +10,8 @@ get_intrinsic_features()
 Character vector of intrinsic recognition feature names
 }
 \description{
-Returns feature names related to intrinsic Cas9:gRNA:DNA recognition,
-excluding transcription-related features. These features should be
-predictive regardless of gRNA delivery method.
+Returns feature names related to intrinsic Cas9:gRNA:DNA recognition
+and not gRNA transcription.
 }
 \details{
 Intrinsic recognition features include:
@@ -30,5 +29,5 @@ length(intrinsic)
 
 }
 \seealso{
-\code{\link{get_transcription_features}} for transcription features
+\code{\link{get_transcription_features}}
 }

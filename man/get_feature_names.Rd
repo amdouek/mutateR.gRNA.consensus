@@ -20,7 +20,7 @@ Useful for feature selection and ablation studies.
 feature_names <- get_feature_names()
 length(feature_names)
 
-# Categorize features
+# Categorise features
 positional <- grep("^pos\\\\d+_", feature_names, value = TRUE)
 dinuc <- grep("^freq_", feature_names, value = TRUE)
 

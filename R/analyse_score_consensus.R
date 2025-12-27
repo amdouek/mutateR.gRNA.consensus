@@ -294,6 +294,14 @@ analyze_score_consensus <- function(gene_ids,
     stop("Failed to retrieve exon structures: ", e$message)
   })
 
+  # Fast fail for seqlevel check
+  seqlevel_status <- check_seqlevel_status(exons_gr, style = "Ensembl")
+
+  if (!seqlevel_status$is_primary) {
+    failure_msg <- format_seqlevel_failure(seqlevel_status)
+    stop("Failed to find gRNA sites: ", failure_msg)
+  }
+
   result$exons <- exons_gr
   n_exons <- length(exons_gr)
 

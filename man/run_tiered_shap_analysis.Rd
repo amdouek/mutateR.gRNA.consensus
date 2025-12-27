@@ -30,7 +30,7 @@ Default: c("ruleset1")}
 
 \item{rasterize}{Logical. Rasterize beeswarm plots (default TRUE if n > 5000)}
 
-\item{raster_dpi}{Integer. DPI for rasterization (default 300)}
+\item{raster_dpi}{Integer. DPI for rasterisation (default 300)}
 
 \item{quiet}{Logical. Suppress progress messages (default FALSE)}
 }
@@ -48,21 +48,18 @@ A list of class "mutateR_tiered_shap" containing:
 }
 \description{
 Executes SHAP analysis for multiple target variables representing different
-aspects of gRNA quality and method agreement. This enables systematic
-comparison of feature importance across analytical perspectives.
+aspects of gRNA quality and method agreement.
 }
 \details{
 The four tiers address different analytical questions:
 
 \strong{modern_quality:} What features predict high efficacy according to
-modern deep learning methods? This is the primary analysis for understanding
-gRNA design rules.
+modern deep learning methods?
 
 \strong{modern_discord:} What features cause modern methods to disagree?
-Identifies edge cases and potential model-specific biases.
 
-\strong{legacy_divergence:} What features does RuleSet1 "miss" that modern
-methods capture? Reveals what the field has learned since 2014.
+\strong{legacy_divergence:} What features does legacy methods "miss" that modern
+methods capture?
 
 \strong{robust_quality:} What features predict quality using outlier-resistant
 statistics? Provides a conservative consensus view.

@@ -25,7 +25,7 @@ Default "auto" for automatic selection based on interaction strength.}
 
 \item{rasterize}{Logical. Rasterize points for large datasets (default TRUE if n > 5000)}
 
-\item{raster_dpi}{Integer. DPI for rasterization (default 300)}
+\item{raster_dpi}{Integer. DPI for rasterisation (default 300)}
 }
 \value{
 A ggplot object (combined with patchwork if available) or list of ggplot objects

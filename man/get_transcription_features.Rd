@@ -19,25 +19,18 @@ rather than intrinsic Cas9:gRNA:DNA recognition. These features are
 relevant for plasmid/lentiviral delivery but not for synthetic gRNA/RNP delivery.
 }
 \details{
-Features are classified as transcription-related if they:
-\itemize{
-\item Affect Pol III termination (TT dinucleotides, poly-T runs)
-\item Affect transcription initiation (position 1 nucleotide for U6/T7)
-\item Affect transcript processing/stability (5' region)
-}
-
 \strong{Core transcription features:}
 \itemize{
-\item \code{freq_TT}: TT dinucleotide frequency (Pol III terminator signal)
-\item \code{has_polyT}: Presence of TTTT run
-\item \code{pos1_*}: Position 1 nucleotides (U6 +1 preference for G)
-\item \code{max_homopolymer}: Longest homopolymer run
+\item \code{freq_TT}
+\item \code{has_polyT}
+\item \code{pos1_N}
+\item \code{max_homopolymer}
 }
 
 \strong{Extended features (if include_extended = TRUE):}
 \itemize{
-\item \code{pos2_*}, \code{pos3_*}: Extended 5' region affecting processing
-\item \code{has_polyA/G/C}: Other homopolymer runs
+\item \code{pos2_N}, \code{pos3_N}
+\item \code{has_polyA/G/C}
 }
 }
 \examples{
@@ -55,6 +48,6 @@ intrinsic_features <- setdiff(all_features, tx_all)
 
 }
 \seealso{
-\code{\link{run_transcription_ablation}} for ablation analysis,
-\code{\link{get_feature_categories}} for all feature categories
+\code{\link{run_transcription_ablation}}
+\code{\link{get_feature_categories}}
 }

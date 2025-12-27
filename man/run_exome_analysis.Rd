@@ -15,6 +15,8 @@ run_exome_analysis(
   nuclease = c("Cas9", "Cas12a", "enCas12a"),
   methods = NULL,
   skip_plots = TRUE,
+  n_genes = NULL,
+  sample_seed = 42,
   quiet = FALSE
 )
 }
@@ -39,6 +41,11 @@ run_exome_analysis(
 based on nuclease type.}
 
 \item{skip_plots}{Logical. Skip plot generation for speed (default TRUE).}
+
+\item{n_genes}{Integer or NULL (default). If specified,
+this number of genes will be randomly selected for processing (instead of all genes).}
+
+\item{sample_seed}{Random seed for sample reproducibility (default 42). For use with n_genes.}
 
 \item{quiet}{Logical. Suppress progress messages (default FALSE).}
 }

@@ -32,7 +32,7 @@ List containing:
 }
 }
 \description{
-Generates comparison visualizations and statistics for two SHAP analyses.
+Generates comparison visualisations and statistics for two SHAP analyses.
 Useful for comparing feature importance between targets (e.g., modern quality
 vs. legacy divergence) or between different datasets.
 }
